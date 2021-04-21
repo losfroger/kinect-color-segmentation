@@ -57,6 +57,7 @@ imgLab = applycform(imgColor, colorTransform);
 imgLab = double(imgLab);
 
 % Variable auxiliar
+[u, v, ch] = size(imgColor);
 auxLab = zeros(3,u*v);
 for i = 1:3
 	auxLab(i,:) = reshape(imgLab(:,:,i), [u*v, 1]);		
