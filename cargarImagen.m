@@ -1,5 +1,5 @@
 % Regresa las imagenes a color, profundidad y en cielab. Ya rectificadas
-function [imgColor, imgDepth, imgLab] = cargarImagen(kinect, saveImg)
+function [imgColor, imgDepth, imgLab, auxLab] = cargarImagen(kinect, saveImg)
 
 if kinect == true
 	%% Capturar imagen desde el kinect
@@ -55,5 +55,11 @@ imgDepth = cat(3, imgDepth, imgDepth, imgDepth);
 colorTransform = makecform('srgb2lab');
 imgLab = applycform(imgColor, colorTransform);
 imgLab = double(imgLab);
+
+% Variable auxiliar
+auxLab = zeros(3,u*v);
+for i = 1:3
+	auxLab(i,:) = reshape(imgLab(:,:,i), [u*v, 1]);		
+end
 
 end

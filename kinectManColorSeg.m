@@ -3,11 +3,10 @@ close all;
 clear all;
 
 %% Cargar imagenes desde una función
-[imgColor, imgDepth, imgLab] = cargarImagen(false, false);
+[imgColor, imgDepth, imgLab, auxLab] = cargarImagen(false, false);
 
 figure(1)
 imshow(imgColor);
-
 
 %% Conseguir coordenada del click
 % np = numero de clicks
@@ -28,12 +27,6 @@ imgMask = zeros(u,v);
 figure(2)
 % Usar tight_subplot para que las graficas queden mas juntas
 ha = tight_subplot(ceil(np/2), 2, 0.01, 0.01, 0.01);
-
-% Variable auxiliar
-auxLab = zeros(3,u*v);
-for i = 1:3
-	auxLab(i,:) = reshape(imgLab(:,:,i), [u*v, 1]);		
-end
 
 for k = 1:np
 	% Sacar valor de color a segmentar
@@ -60,7 +53,7 @@ for k = 1:np
     hold off;
 end
 
-% Mostrar resultados
+%% Mostrar resultados
 figure(3)
 ha = tight_subplot(2, 2, 0.05, 0.05, 0.05);
 %subplot(2,2,1);

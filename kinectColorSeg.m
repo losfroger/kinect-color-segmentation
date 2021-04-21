@@ -3,7 +3,7 @@ close all;
 clear all;
 
 %% Cargar imagenes desde una función
-[imgColor, imgDepth, imgLab] = cargarImagen(false, false);
+[imgColor, imgDepth, imgLab, auxLab] = cargarImagen(false, false);
 
 %% Generar la mascara
 [u, v, ch] = size(imgColor);
