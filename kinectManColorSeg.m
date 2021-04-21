@@ -35,8 +35,8 @@ imgDepth = uint8(imgDepth);
 % dist = (x*4000)/255
 
 % Guardar las imagenes
-imwrite(imgColor, "imageKinect.png");
-imwrite(imgDepth, "imageDepthKinect.png");
+%imwrite(imgColor, "imageKinect.png");
+%imwrite(imgDepth, "imageDepthKinect.png");
 
 %% Rectificar imagenes a partir de la calibración
 % A partir de aqui se puede correr el programa sin el kinect
@@ -125,6 +125,7 @@ title('Mascara');
 imgMask = imfill(imgMask, 'holes');
 se = strel('disk', 2);
 imgMask = imopen(imgMask, se);
+imgMask = bwareaopen(imgMask, 500);
 
 %subplot(2,2,2);
 axes(ha(2));
@@ -138,22 +139,40 @@ axes(ha(3));
 imshow(finalImg);
 title('Imagen final');
 
-hFig = figure(5);
-hAx = axes(hFig);
-hold(hAx,'on');
-
-imshow(finalImg);
+figure(5);
+ha = tight_subplot(1, 2, 0.05, 0.05, 0.05);
+axes(ha(1))
+hold on;
+imshow(imgColor);
 for i = 1:np
 	% Mostrar punto de donde se hizo click
-    plot(hAx, x(i), y(i), 'ro', 'MarkerSize', 5);
+    plot(x(i), y(i), 'ro', 'MarkerSize', 5);
     % Distancia en mm, luego convertida a cm
 	% Nota: Se le debe de sumar 8 a x, porque el sensor de profundidad
 	% siempre tiene una franja vacia de pixeles del lado izquierdo
-    dist = (double(imgDepth(y(i), x(i) + 8, 1)) * 4000.0) / 255.0;
+    dist = (double(imgDepth(y(i), x(i)+8, 1)) * 4000.0) / 255.0;
     dist = dist / 10.0;
 	% Mostrar texto de la distancia del punto
     txt = string(round(dist, 1)) + "cm";
     text(x(i) + 5, y(i), txt, 'Color', 'white')
 end
-
 title('Imagen final, con los puntos y sus distancias')
+hold off;
+
+axes(ha(2))
+hold on;
+imshow(imgDepth);
+for i = 1:np
+	% Mostrar punto de donde se hizo click
+    plot(x(i)+8, y(i), 'ro', 'MarkerSize', 5);
+    % Distancia en mm, luego convertida a cm
+	% Nota: Se le debe de sumar 8 a x, porque el sensor de profundidad
+	% siempre tiene una franja vacia de pixeles del lado izquierdo
+    dist = (double(imgDepth(y(i), x(i)+8, 1)) * 4000.0) / 255.0;
+    dist = dist / 10.0;
+	% Mostrar texto de la distancia del punto
+    txt = string(round(dist, 1)) + "cm";
+    %text(x(i) + 5, y(i), txt, 'Color', 'white')
+end
+title('Imagen profundidad, con los puntos y sus distancias')
+hold off;
