@@ -1,3 +1,10 @@
+clc;
+close all;
+clear all;
+
+%% Cargar imagenes desde una función
+[imgColor, imgDepth, imgLab] = cargarImagen(false, false);
+
 %% Generar la mascara
 [u, v, ch] = size(imgColor);
 imgMask = zeros(u,v);
@@ -60,3 +67,5 @@ for index = 1:size(bBoxes, 1)
     txt = string(round(dist, 1)) + "cm";
     text(x + 5, y, txt, 'Color', 'white')
 end
+
+hold off;

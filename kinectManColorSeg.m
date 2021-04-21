@@ -2,62 +2,8 @@ clc;
 close all;
 clear all;
 
-%% Capturar imagen
-
-colorVid = videoinput('kinect', 1);
-depthVid = videoinput('kinect', 2);
-
-colorVid.FramesPerTrigger = 1;
-depthVid.FramesPerTrigger = 1;
-
-triggerconfig([colorVid depthVid], 'manual');
-
-start([colorVid depthVid]);
-
-% el for solo es por si se quiere capturar mas de una imagen
-for i = 1:1
-	trigger([colorVid depthVid])
-    % la imagen a color se guarda en imgColor
-	[imgColor, ta_color, metaData_Color] = getdata(colorVid);
-	% la imagen de profundidad se guarda en imgDepth y la versión
-	% sin procesar en imgDepthRaw
-    [imgDepthRaw, ta_depth, metaData_Depth] = getdata(depthVid);
-end
-
-stop([colorVid depthVid]);
-
-% Convertir imagen de profundidad en uint8
-imgDepth = mat2gray(imgDepthRaw, [0 4000]);
-imgDepth = imgDepth.*255;
-imgDepth = uint8(imgDepth);
-
-% Para calcular la distancia, se usa la regla de tres:
-% dist = (x*4000)/255
-
-% Guardar las imagenes
-%imwrite(imgColor, "imageKinect.png");
-%imwrite(imgDepth, "imageDepthKinect.png");
-
-%% Rectificar imagenes a partir de la calibración
-% A partir de aqui se puede correr el programa sin el kinect
-% Cargar archivo de calibración
-load('stereoParams.mat')
-imgColor = imread("imageKinect.png");
-imgDepth = imread("imageDepthKinect.png");
-
-% Es necesario hacer que la imagen de profundidad sea de tres dimensiones
-% para poder hacer la rectificación
-imgDepth = cat(3, imgDepth, imgDepth, imgDepth);
-
-% Rectificar las imagenes usando la calibracion
-[imgColor, imgDepth] = rectifyStereoImages(imgColor, imgDepth, stereoParams);
-
-%% Convertir a CIELab
-
-% La imagen en CIElab se guarda en la variable lab
-colorTransform = makecform('srgb2lab');
-lab = applycform(imgColor, colorTransform);
-lab = double(lab);
+%% Cargar imagenes desde una función
+[imgColor, imgDepth, imgLab] = cargarImagen(false, false);
 
 figure(1)
 imshow(imgColor);
@@ -86,12 +32,12 @@ ha = tight_subplot(ceil(np/2), 2, 0.01, 0.01, 0.01);
 % Variable auxiliar
 auxLab = zeros(3,u*v);
 for i = 1:3
-	auxLab(i,:) = reshape(lab(:,:,i), [u*v, 1]);		
+	auxLab(i,:) = reshape(imgLab(:,:,i), [u*v, 1]);		
 end
 
 for k = 1:np
 	% Sacar valor de color a segmentar
-	lab_ref = [lab(y(k), x(k), 1); lab(y(k), x(k), 2); lab(y(k), x(k), 3)];
+	lab_ref = [imgLab(y(k), x(k), 1); imgLab(y(k), x(k), 2); imgLab(y(k), x(k), 3)];
 	th = 0.11;
 
 	mSeg = ((auxLab(1, :) - lab_ref(1)).^2 + ...
