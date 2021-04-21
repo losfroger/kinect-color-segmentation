@@ -1,4 +1,5 @@
 %% Generar la mascara
+[u, v, ch] = size(imgColor);
 imgMask = zeros(u,v);
 
 bwDepth = rgb2hsv(imgColor);
@@ -38,3 +39,24 @@ finalImg = bsxfun(@times, imgColor, cast(imgMask, 'like', imgColor));
 figure(10)
 imshow(imSeg, []);
 imshowpair(imgColor, finalImg, 'montage')
+
+%% Bounding boxes
+
+bBoxes = regionprops(imgMask);
+figure(11)
+imshow(finalImg)
+hold on;
+
+for index = 1:size(bBoxes, 1)
+    x = ceil(bBoxes(index).Centroid(1));
+    y = ceil(bBoxes(index).Centroid(2));
+    
+    rectangle('Position', bBoxes(index).BoundingBox, 'EdgeColor', 'r', 'LineWidth', 3);
+	plot(x, y, 'r*');
+    
+    dist = (double(imgDepth(y, x+8, 2)) * 4000.0) / 255.0;
+    dist = dist / 10.0;
+	% Mostrar texto de la distancia del punto
+    txt = string(round(dist, 1)) + "cm";
+    text(x + 5, y, txt, 'Color', 'white')
+end
