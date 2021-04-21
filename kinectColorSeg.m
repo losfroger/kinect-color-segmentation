@@ -47,12 +47,56 @@ figure(10)
 imshow(imSeg, []);
 imshowpair(imgColor, finalImg, 'montage')
 
-%% Bounding boxes
-
-bBoxes = regionprops(imgMask);
+%% Etiquetas colores
 figure(11)
 imshow(finalImg)
 hold on;
+% Las etiquetas se almacenan en colors
+colors = [195 64 63; 46 64 105; 122 58 21; 36 48 40];
+
+% Convertir a cielab
+colorTransform = makecform('srgb2lab');
+colorsLab = applycform(uint8(colors), colorTransform);
+colorsLab  = double(colorsLab);
+
+for i = 1:size(colors, 1)
+    imgColorMask = zeros(u,v);
+    % Usar el color, convertido a cielab para hacer la operación
+	color_ = colorsLab(i,:);
+    
+    th = 0.11;
+
+	mSeg = ((auxLab(1, :) - color_(1)).^2 + ...
+			(auxLab(2, :) - color_(2)).^2 + ...
+			(auxLab(3, :) - color_(3)).^2).^(1/2);
+	
+	imgProb = zeros(u,v);
+	imgProb(:) = (mSeg)/max(mSeg);
+
+    % Sacar la máscara
+	imgColorMask(imgProb < th) = 1;
+    
+    % Procesar la máscara
+    imgColorMask = imfill(imgColorMask, 'holes');
+    se = strel('disk', 2);
+    imgColorMask = imopen(imgColorMask, se);
+    imgColorMask = bwareaopen(imgColorMask, 100);
+    
+    % Mostrar rectángulo con el nombre
+    bBoxes = regionprops(imgColorMask);
+    
+    for index = 1:size(bBoxes, 1)
+        x = ceil(bBoxes(index).Centroid(1));
+        y = ceil(bBoxes(index).Centroid(2));
+
+        rectangle('Position', bBoxes(index).BoundingBox, 'EdgeColor', [0.5 0.5 0.5], 'LineWidth', 1);
+        text(x, y, 'Color' + string(i), 'Color', 'w', 'HorizontalAlignment', 'center');
+    end
+end
+
+%% Bounding boxes
+
+bBoxes = regionprops(imgMask);
 
 for index = 1:size(bBoxes, 1)
     x = ceil(bBoxes(index).Centroid(1));
@@ -65,7 +109,6 @@ for index = 1:size(bBoxes, 1)
     dist = dist / 10.0;
 	% Mostrar texto de la distancia del punto
     txt = string(round(dist, 1)) + "cm";
-    text(x + 5, y, txt, 'Color', 'white')
+    text(x, y - 10, txt, 'Color', 'white', 'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontSize', 12)
 end
-
 hold off;
