@@ -122,14 +122,14 @@ axes(ha(1));
 imshow(imgMask);
 title('Mascara');
 
-se = strel('line', 2, 90);
-imgMask = imerode(imgMask, se);
-imgMask = imdilate(imgMask, se);
+imgMask = imfill(imgMask, 'holes');
+se = strel('disk', 2);
+imgMask = imopen(imgMask, se);
 
 %subplot(2,2,2);
 axes(ha(2));
 imshow(imgMask);
-title('Mascara despues de ser erosionada');
+title('Mascara despues de ser procesada');
 
 finalImg = bsxfun(@times, imgColor, cast(imgMask, 'like', imgColor));
 
