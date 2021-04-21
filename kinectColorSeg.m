@@ -1,21 +1,25 @@
 %% Generar la mascara
 imgMask = zeros(u,v);
 
-lv = 4;
-bwDepth = rgb2gray(imgColor);
-bwDepth = imadjust(bwDepth,[],[],0.5);
+bwDepth = rgb2hsv(imgColor);
+bwDepth = imadjust(bwDepth,[],[],1.2);
 
 %se = strel('disk',50);
-
 %bwDepth = imtophat(bwDepth, se);
+lv = 5;
+channel = 2;
 
-th = multithresh(bwDepth, lv);
-imSeg = imquantize(bwDepth, th);
+th = multithresh(bwDepth(:,:,channel), lv);
+imSeg = imquantize(bwDepth(:,:,channel), th); 
 
-imgMask(imSeg < 4) = 1;
+imgMask(imSeg > 2) = 1;
 
 figure(8)
-imshowpair(bwDepth, imSeg, 'montage')
+subplot(1,2,1)
+imshow(imSeg, [])
+subplot(1,2,2)
+imshow(imgMask)
+
 
 %% Ajustar la mascara
 se = strel('disk', 2);
@@ -23,7 +27,8 @@ se = strel('disk', 2);
 imgMask = imdilate(imgMask, se);
 imgMask = imfill(imgMask, 'holes');
 imgMask = imerode(imgMask, se);
-imgMask = bwareafilt(logical(imgMask), [2000 50000]);
+
+imgMask = bwareaopen(imgMask, 1000);
 
 %imgMask = imtranslate(imgMask ,[-8, 0],'FillValues',0);
 
@@ -32,4 +37,4 @@ finalImg = bsxfun(@times, imgColor, cast(imgMask, 'like', imgColor));
 
 figure(10)
 imshow(imSeg, []);
-imshowpair(imgMask, finalImg, 'montage')
+imshowpair(imgColor, finalImg, 'montage')
