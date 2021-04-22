@@ -86,8 +86,8 @@ hold(hAx,'on');
 imshow(finalImg);
 for i = 1:np
 	% Mostrar punto de donde se hizo click
-%     plot(hAx, x(i), y(i), 'ro', 'MarkerSize', 5);
-    scatter(x(i),y(i),'filled')
+    plot(hAx, x(i), y(i), 'ro', 'MarkerSize', 5);
+%     scatter(x(i),y(i),'filled')
     % Distancia en mm, luego convertida a cm
 	% Nota: Se le debe de sumar 8 a x, porque el sensor de profundidad
 	% siempre tiene una franja vacia de pixeles del lado izquierdo
@@ -99,9 +99,9 @@ for i = 1:np
 end
 lgd = legend;
 % lgd.FontSize = 12;
-lgd.Title.String = 'Puntos';
+lgd.Title.String = 'Zona de Click';
 lgd.NumColumns = 2;
-legend('Click 1', 'Click2', 'Click3', 'Click4')
+legend('Punto de click')
 title('Imagen final, con los puntos y sus distancias')
 
 % figure(5);
