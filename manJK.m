@@ -2,11 +2,32 @@ clc;
 close all;
 clear all;
 
-%% Cargar imagenes desde una función
-[imgColor, imgDepth, imgLab, auxLab] = cargarImagen(false, false);
+
+
+%% Rectificar imagenes a partir de la calibración
+% A partir de aqui se puede correr el programa sin el kinect
+% Cargar archivo de calibración
+load('stereoParams.mat')
+imgColor = imread("imageKinect.png");
+imgDepth = imread("imageDepthKinect.png");
+
+% Es necesario hacer que la imagen de profundidad sea de tres dimensiones
+% para poder hacer la rectificación
+imgDepth = cat(3, imgDepth, imgDepth, imgDepth);
+
+% Rectificar las imagenes usando la calibracion
+[imgColor, imgDepth] = rectifyStereoImages(imgColor, imgDepth, stereoParams);
+
+%% Convertir a CIELab
+
+% La imagen en CIElab se guarda en la variable lab
+colorTransform = makecform('srgb2lab');
+lab = applycform(imgColor, colorTransform);
+lab = double(lab);
 
 figure(1)
 imshow(imgColor);
+
 
 %% Conseguir coordenada del click
 % np = numero de clicks
@@ -28,9 +49,15 @@ figure(2)
 % Usar tight_subplot para que las graficas queden mas juntas
 ha = tight_subplot(ceil(np/2), 2, 0.01, 0.01, 0.01);
 
+% Variable auxiliar
+auxLab = zeros(3,u*v);
+for i = 1:3
+	auxLab(i,:) = reshape(lab(:,:,i), [u*v, 1]);		
+end
+
 for k = 1:np
 	% Sacar valor de color a segmentar
-	lab_ref = [imgLab(y(k), x(k), 1); imgLab(y(k), x(k), 2); imgLab(y(k), x(k), 3)];
+	lab_ref = [lab(y(k), x(k), 1); lab(y(k), x(k), 2); lab(y(k), x(k), 3)];
 	th = 0.11;
 
 	mSeg = ((auxLab(1, :) - lab_ref(1)).^2 + ...
@@ -53,7 +80,7 @@ for k = 1:np
     hold off;
 end
 
-%% Mostrar resultados
+% Mostrar resultados
 figure(3)
 ha = tight_subplot(2, 2, 0.05, 0.05, 0.05);
 %subplot(2,2,1);
@@ -64,7 +91,6 @@ title('Mascara');
 imgMask = imfill(imgMask, 'holes');
 se = strel('disk', 2);
 imgMask = imopen(imgMask, se);
-imgMask = bwareaopen(imgMask, 500);
 
 %subplot(2,2,2);
 axes(ha(2));
@@ -78,7 +104,6 @@ axes(ha(3));
 imshow(finalImg);
 title('Imagen final');
 
-%%JK
 hFig = figure(5);
 hAx = axes(hFig);
 hold(hAx,'on');
@@ -86,8 +111,7 @@ hold(hAx,'on');
 imshow(finalImg);
 for i = 1:np
 	% Mostrar punto de donde se hizo click
-%     plot(hAx, x(i), y(i), 'ro', 'MarkerSize', 5);
-    scatter(x(i),y(i),'filled')
+    plot(hAx, x(i), y(i), 'ro', 'MarkerSize', 5);
     % Distancia en mm, luego convertida a cm
 	% Nota: Se le debe de sumar 8 a x, porque el sensor de profundidad
 	% siempre tiene una franja vacia de pixeles del lado izquierdo
@@ -97,47 +121,5 @@ for i = 1:np
     txt = string(round(dist, 1)) + "cm";
     text(x(i) + 5, y(i), txt, 'Color', 'white')
 end
-lgd = legend;
-% lgd.FontSize = 12;
-lgd.Title.String = 'Puntos';
-lgd.NumColumns = 2;
-legend('Click 1', 'Click2', 'Click3', 'Click4')
-title('Imagen final, con los puntos y sus distancias')
 
-% figure(5);
-% ha = tight_subplot(1, 2, 0.05, 0.05, 0.05);
-% axes(ha(1))
-% hold on;
-% imshow(imgColor);
-% for i = 1:np
-% 	% Mostrar punto de donde se hizo click
-%     plot(x(i), y(i), 'ro', 'MarkerSize', 5);
-%     % Distancia en mm, luego convertida a cm
-% 	% Nota: Se le debe de sumar 8 a x, porque el sensor de profundidad
-% 	% siempre tiene una franja vacia de pixeles del lado izquierdo
-%     dist = (double(imgDepth(y(i), x(i)+8, 1)) * 4000.0) / 255.0;
-%     dist = dist / 10.0;
-% 	% Mostrar texto de la distancia del punto
-%     txt = string(round(dist, 1)) + "cm";
-%     text(x(i) + 5, y(i), txt, 'Color', 'white')
-% end
-% title('Imagen final, con los puntos y sus distancias')
-% hold off;
-% 
-% axes(ha(2))
-% hold on;
-% imshow(imgDepth);
-% for i = 1:np
-% 	% Mostrar punto de donde se hizo click
-%     plot(x(i)+8, y(i), 'ro', 'MarkerSize', 5);
-%     % Distancia en mm, luego convertida a cm
-% 	% Nota: Se le debe de sumar 8 a x, porque el sensor de profundidad
-% 	% siempre tiene una franja vacia de pixeles del lado izquierdo
-%     dist = (double(imgDepth(y(i), x(i)+8, 1)) * 4000.0) / 255.0;
-%     dist = dist / 10.0;
-% 	% Mostrar texto de la distancia del punto
-%     txt = string(round(dist, 1)) + "cm";
-%     %text(x(i) + 5, y(i), txt, 'Color', 'white')
-% end
-% title('Imagen profundidad, con los puntos y sus distancias')
-% hold off;
+title('Imagen final, con los puntos y sus distancias')
